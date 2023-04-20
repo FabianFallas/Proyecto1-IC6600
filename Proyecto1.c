@@ -1,3 +1,8 @@
+///////////////////////////////////////////////////////////
+//El codigo se ejecuta de la siguiente forma e  visual studio code:
+//- gcc -o Proyecto1 Proyecto1.c -lpthread
+//- ./Proyecto1 palabraabuscar archivo
+//////////////////////////////////////////////////////////
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
