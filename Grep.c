@@ -3,8 +3,9 @@
 #include <string.h>
 #include <pthread.h>
 #include <regex.h>
+#include <time.h>
 #define MAX_THREADS 1 // número máximo de hilos
-#define BUFFER_SIZE 1024 // tamaño del buffer
+#define BUFFER_SIZE 8192 // tamaño del buffer
 
 typedef struct {
     char *buffer; // buffer para almacenar los datos leídos del archivo
@@ -41,9 +42,9 @@ void *worker(void *arg) {
             memmove(data->buffer, &data->buffer[data->pos], data->size - data->pos);
             data->size -= data->pos;
             data->pos = 0;
-            pthread_mutex_lock(&mutex_file); //bloquea el archivo
+            //pthread_mutex_lock(&mutex_file); //bloquea el archivo
             size_t n = fread(&data->buffer[data->size], 1, BUFFER_SIZE - data->size, _file);
-            pthread_mutex_unlock(&mutex_file);// quita el bloqueo del archivo
+            //pthread_mutex_unlock(&mutex_file);// quita el bloqueo del archivo
             data->size += n;
             data->buffer[data->size] = '\0';
             continue;
@@ -52,6 +53,7 @@ void *worker(void *arg) {
         result = regexec(&data->regex, line, 0, NULL, 0);
         if (result == 0) {
             // si la expresión regular encuentra una coincidencia, imprime la línea
+            //printf("%d: %s", data->thread, line); // Linea para debuggeo de impresión por hilo
             printf("%s", line);
         } else if (result != REG_NOMATCH) {
             // si hay un error en la expresión regular, muestra un mensaje de error y sale del programa
@@ -67,6 +69,10 @@ void *worker(void *arg) {
 }
 
 int main(int argc, char *argv[]) {
+    //Variables de medición de tiempo
+    clock_t start, end;
+    start = clock();
+
     // Verificar que se han proporcionado suficientes argumentos
     if (argc < 3) {
         fprintf(stderr, "Uso: %s [patron] [archivo...]\n", argv[0]);
@@ -98,9 +104,9 @@ int main(int argc, char *argv[]) {
     // Asignar la estructura de datos correspondiente para el siguiente hilo
     while(num_threads < MAX_THREADS){
         data[num_threads].buffer = malloc(BUFFER_SIZE + 1);
-        pthread_mutex_lock(&mutex_file);
+        //pthread_mutex_lock(&mutex_file);
         data[num_threads].size = fread(data[num_threads].buffer, 1, BUFFER_SIZE, _file);
-        pthread_mutex_unlock(&mutex_file);
+        //pthread_mutex_unlock(&mutex_file);
         data[num_threads].buffer[data[num_threads].size] = '\0';
         data[num_threads].pos = 0;
         data[num_threads].regex = regex;
@@ -129,6 +135,11 @@ int main(int argc, char *argv[]) {
 
     // Liberar la memoria utilizada por la expresión regular
     regfree(&regex);
+
+    //Se calcula el tiempo de ejecución del proceso
+    end = clock();
+    double time = (double)(end-start) / CLOCKS_PER_SEC;
+    printf("Ejecución: %f seg.\n", time);
 
     return 0;
 }
