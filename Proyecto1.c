@@ -9,7 +9,7 @@
 #include <pthread.h>
 #include <regex.h>
 
-#define MAX_THREADS 4 // número máximo de hilos
+#define MAX_THREADS 1 // número máximo de hilos
 #define BUFFER_SIZE 1024 // tamaño del buffer
 
 typedef struct {
@@ -101,16 +101,17 @@ int main(int argc, char *argv[]) {
                 }
                 num_threads = 0;
             }
+            else{
+                // Asignar la estructura de datos correspondiente para el siguiente hilo
+                data[num_threads].file = file;
+                data[num_threads].buffer = malloc(BUFFER_SIZE);
+                data[num_threads].size = fread(data[num_threads].buffer, 1, BUFFER_SIZE, file);
+                data[num_threads].regex = regex;
 
-            // Asignar la estructura de datos correspondiente para el siguiente hilo
-            data[num_threads].file = file;
-            data[num_threads].buffer = malloc(BUFFER_SIZE);
-            data[num_threads].size = fread(data[num_threads].buffer, 1, BUFFER_SIZE, file);
-            data[num_threads].regex = regex;
-
-            // Crear el siguiente hilo y aumentar el contador
-            pthread_create(&threads[num_threads], NULL, worker, &data[num_threads]);
-            num_threads++;
+                // Crear el siguiente hilo y aumentar el contador
+                pthread_create(&threads[num_threads], NULL, worker, &data[num_threads]);
+                num_threads++;
+            }
         }
     }
 
