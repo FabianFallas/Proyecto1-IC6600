@@ -3,7 +3,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <regex.h>
-#include <time.h>
+
 #define MAX_THREADS 1 // número máximo de hilos
 #define BUFFER_SIZE 8192 // tamaño del buffer
 
@@ -69,10 +69,6 @@ void *worker(void *arg) {
 }
 
 int main(int argc, char *argv[]) {
-    //Variables de medición de tiempo
-    clock_t start, end;
-    start = clock();
-
     // Verificar que se han proporcionado suficientes argumentos
     if (argc < 3) {
         fprintf(stderr, "Uso: %s [patron] [archivo...]\n", argv[0]);
@@ -81,7 +77,6 @@ int main(int argc, char *argv[]) {
 
     // Compilar la expresión regular a partir del patrón proporcionado por el usuario
     regex_t regex;
-
     char *exp = argv[1];
     if (regcomp(&regex, exp, 0) != 0) {
         fprintf(stderr, "Error en expresión regular\n");
@@ -121,11 +116,11 @@ int main(int argc, char *argv[]) {
     }
 
     // Espera a que todos los hilos hayan terminado antes de continuar
-    for (int j = 0; j < num_threads; j++) {
+    for (int j = 0; j < MAX_THREADS; j++) {
         pthread_join(threads[j], NULL);
     }
     // Libera los buffers
-    for (int j = 0; j < num_threads; j++) {
+    for (int j = 0; j < MAX_THREADS; j++) {
         free(data[j].buffer);
         data[j].buffer = NULL;
     }
@@ -136,11 +131,6 @@ int main(int argc, char *argv[]) {
 
     // Liberar la memoria utilizada por la expresión regular
     regfree(&regex);
-
-    //Se calcula el tiempo de ejecución del proceso
-    end = clock();
-    double time = (double)(end-start) / CLOCKS_PER_SEC;
-    printf("Ejecución: %f seg.\n", time);
 
     return 0;
 }
