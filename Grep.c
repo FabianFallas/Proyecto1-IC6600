@@ -42,9 +42,9 @@ void *worker(void *arg) {
             memmove(data->buffer, &data->buffer[data->pos], data->size - data->pos);
             data->size -= data->pos;
             data->pos = 0;
-            //pthread_mutex_lock(&mutex_file); //bloquea el archivo
+            pthread_mutex_lock(&mutex_file); //bloquea el archivo
             size_t n = fread(&data->buffer[data->size], 1, BUFFER_SIZE - data->size, _file);
-            //pthread_mutex_unlock(&mutex_file);// quita el bloqueo del archivo
+            pthread_mutex_unlock(&mutex_file);// quita el bloqueo del archivo
             data->size += n;
             data->buffer[data->size] = '\0';
             continue;
@@ -100,9 +100,9 @@ int main(int argc, char *argv[]) {
     // Asignar la estructura de datos correspondiente para el siguiente hilo
     while(num_threads < MAX_THREADS){
         data[num_threads].buffer = malloc(BUFFER_SIZE + 1);
-        //pthread_mutex_lock(&mutex_file);
+        pthread_mutex_lock(&mutex_file);
         data[num_threads].size = fread(data[num_threads].buffer, 1, BUFFER_SIZE, _file);
-        //pthread_mutex_unlock(&mutex_file);
+        pthread_mutex_unlock(&mutex_file);
         data[num_threads].buffer[data[num_threads].size] = '\0';
         data[num_threads].pos = 0;
         data[num_threads].regex = regex;
